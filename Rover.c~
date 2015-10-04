@@ -1,0 +1,88 @@
+/*
+ * Rover.c
+ *
+ * Created: 4/9/2015 10:54:56 AM
+ *  Author: robideau
+ */ 
+
+/*
+*CURRENT CONFIGURATION FOR ROBOT 4
+*/
+
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include "util.h"
+#include "lcd.h"
+#include <math.h>
+#include <stdio.h>
+#include "irsensor.h"
+#include "serial.h"
+#include "ping.h"
+#include "servo.h"
+#include "open_interface.h"
+#include "movement.h"
+#include "remoteControl.h"
+
+
+#define CLOCK_COUNT 16000000
+#define FOSC 16000000// Clock speed - oscillation (unchanged)
+#define BAUD 57600//Baud rate (bluetooth)
+#define MYUBRR (FOSC/(16*BAUD))-1 //set ubrr for serial init
+
+
+
+
+
+
+Object currentObjects[20]; //must empty before each use to prevent residual objects
+
+int main() {
+	lcd_init();
+	timer1_init();
+	timer3_init();
+	move_servo(90);
+	ADC_init();
+	USART_Init(MYUBRR);
+	init_push_buttons();
+	
+	while(1) {
+		//empty currentObjects before proceeding by setting all stored objects to "invalid" - ignored by later checks
+		for (int i; i < 20; i++) {
+			currentObjects[i].isValid = 0;
+		}
+
+		char received = serial_getc();
+		takeDirectionInput(received, currentObjects);
+	}
+	
+	return 0;
+}
+
+/* rough interface concept - ascii graphics within putty to avoid full gui programming
+void interfaceInit() {
+	char screenLines[][31]; //hold lines to be printed to screen - 180 chars each, 31 lines
+	char fillerLine[] = "\n";
+	for (int i = 0; i < 30; i++) {
+		screenLines[i] = fillerLine;
+	}
+	char promptLine[] = "press 'r' to perform initial scan...";
+	screenLines[30] = promptLine[];
+}
+
+void interfaceUpdate() {
+	char screenLines[][]; //hold lines to be printed to screen - 180 chars each, 31 lines
+	sweepScan(currentObjects); //fill currentObjects
+	for (int i = 0; i < 20; i++) {
+		char screenLine[] = "";
+		if (currentObjects[i].isValid == 1 && currentObjects[i].degreePosition <= 180 && currentObjects[i].degreePosition >= 0 && currentObjects[i].cmWidth >= 4) { //throw out any invalid, small, or out-of-range objects
+			//char objectLine[] = ...		
+			//add object to screen lines - can add to a blank string since objects should be in ascending degree positions
+		}
+		for (int i = 0; i < 30; i++) {
+			screenLines[i] = screenLine;
+			//serial_putString(screenLine); //send to putty
+		}
+		
+	}
+	
+}*/
